@@ -5,6 +5,24 @@ import axios from "axios";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import admin, { ServiceAccount } from "firebase-admin";
 import dotenv from "dotenv";
+import * as http from "http";
+
+interface Options {
+  inflate?: boolean;
+  limit?: number | string;
+  type?: string | string[] | ((req: http.IncomingMessage) => any);
+  verify?(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    buf: Buffer,
+    encoding: string
+  ): void;
+}
+declare module "http" {
+  interface IncomingMessage {
+    rawBody: any;
+  }
+}
 
 interface ShopifyCheckout {
   id: string;
@@ -142,12 +160,9 @@ if (finalServiceKey) {
             .limit(1)
             .get();
 
-          const now = new Date();
-          if (
-            !recentMessages.empty &&
-            now - recentMessages.docs[0].data().timestamp.toDate() <
-              24 * 60 * 60 * 1000
-          ) {
+          const hh = recentMessages.docs[0].data().timestamp.toDate() as any;
+          const now = new Date() as any;
+          if (!recentMessages.empty && now - hh < 24 * 60 * 60 * 1000) {
             console.log("⏱️ WhatsApp already sent in last 24h");
             return;
           }
