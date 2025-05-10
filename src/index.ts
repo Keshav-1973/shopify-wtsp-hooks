@@ -294,7 +294,8 @@ if (finalServiceKey) {
               phone: sanitizedPhone,
               messageId: response?.data?.messages?.[0]?.id,
               checkoutId,
-              status: response?.data?.messages?.[0]?.message_status,
+              wtsp_status: response?.data?.messages?.[0]?.message_status,
+              checkout_completed_at: checkout.completed_at,
             });
           } catch (error: any) {
             const errorMsg = error.response?.data ?? error.message;
@@ -305,6 +306,7 @@ if (finalServiceKey) {
               checkoutId,
               status: "failed",
               timestamp: admin.firestore.Timestamp.now(),
+              checkout_completed_at: checkout.completed_at,
               error: errorMsg,
             });
 
@@ -410,11 +412,11 @@ if (finalServiceKey) {
             phone: sanitizedPhone,
             messageId: response?.data?.messages?.[0]?.id,
             checkoutId: checkout?.id,
-            status: response?.data?.messages?.[0]?.message_status,
+            wtsp_status: response?.data?.messages?.[0]?.message_status,
+            checkout_completed_at: checkout.completed_at,
           });
         } catch (error: any) {
           const errorMsg = error.response?.data ?? error.message;
-
           console.error("❌ WhatsApp send failed:", errorMsg);
           await db.collection("whatsappLogs").add({
             fullName: fullName,
@@ -422,6 +424,7 @@ if (finalServiceKey) {
             checkoutId: checkout?.id,
             status: "failed",
             timestamp: admin.firestore.Timestamp.now(),
+            checkout_completed_at: checkout.completed_at,
             error: errorMsg,
           });
         }
