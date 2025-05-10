@@ -122,6 +122,25 @@ const key = (): ServiceAccount | null => {
   }
 };
 
+// 🧠 Full name helper function
+function getFullName(checkout: ShopifyCheckout): string {
+  const nameFromCustomer = `${checkout?.customer?.first_name ?? ""} ${
+    checkout?.customer?.last_name ?? ""
+  }`.trim();
+  const nameFromShipping = `${checkout?.shipping_address?.first_name ?? ""} ${
+    checkout?.shipping_address?.last_name ?? ""
+  }`.trim();
+  const nameFromBilling = `${checkout?.billing_address?.first_name ?? ""} ${
+    checkout?.billing_address?.last_name ?? ""
+  }`.trim();
+
+  if (nameFromCustomer) return nameFromCustomer;
+  if (nameFromShipping) return nameFromShipping;
+  if (nameFromBilling) return nameFromBilling;
+
+  return "Unknown User";
+}
+
 const finalServiceKey = key();
 
 if (finalServiceKey) {
@@ -182,6 +201,7 @@ if (finalServiceKey) {
       }
 
       const phoneNumber = parsePhoneNumberFromString(rawPhone, "IN");
+      const fullName = getFullName(checkout);
 
       if (phoneNumber) {
         if (!phoneNumber.isValid()) {
@@ -270,6 +290,7 @@ if (finalServiceKey) {
             console.log("✅ WhatsApp message sent:", response.data);
 
             await db.collection("whatsappLogs").add({
+              fullName: fullName,
               phone: sanitizedPhone,
               messageId: response?.data?.messages?.[0]?.id,
               checkoutId,
@@ -279,6 +300,7 @@ if (finalServiceKey) {
             const errorMsg = error.response?.data ?? error.message;
             console.error("❌ WhatsApp send failed:", errorMsg);
             await db.collection("whatsappLogs").add({
+              fullName: fullName,
               phone: sanitizedPhone,
               checkoutId,
               status: "failed",
@@ -315,6 +337,7 @@ if (finalServiceKey) {
     res.sendStatus(200); // Respond to Shopify
 
     const checkout: ShopifyCheckout = req.body;
+    const fullName = getFullName(checkout);
 
     const rawPhone =
       checkout.customer?.phone ??
@@ -383,6 +406,7 @@ if (finalServiceKey) {
           console.log("✅ WhatsApp message sent:", response.data);
 
           await db.collection("whatsappLogs").add({
+            fullName: fullName,
             phone: sanitizedPhone,
             messageId: response?.data?.messages?.[0]?.id,
             checkoutId: checkout?.id,
@@ -393,6 +417,7 @@ if (finalServiceKey) {
 
           console.error("❌ WhatsApp send failed:", errorMsg);
           await db.collection("whatsappLogs").add({
+            fullName: fullName,
             phone: sanitizedPhone,
             checkoutId: checkout?.id,
             status: "failed",
