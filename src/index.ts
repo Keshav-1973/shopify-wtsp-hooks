@@ -5,19 +5,7 @@ import axios from "axios";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import admin, { ServiceAccount } from "firebase-admin";
 import dotenv from "dotenv";
-import * as http from "http";
 
-interface Options {
-  inflate?: boolean;
-  limit?: number | string;
-  type?: string | string[] | ((req: http.IncomingMessage) => any);
-  verify?(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    buf: Buffer,
-    encoding: string
-  ): void;
-}
 declare module "http" {
   interface IncomingMessage {
     rawBody: any;
@@ -52,6 +40,7 @@ const {
   FIREBASE_PROJECT_ID,
   SHOPIFY_SECRET_KEY = "",
   SERVICE_KEY,
+  ABANDONED_CHECKOUT_TEMPLATE,
 } = process.env;
 
 const key = (): ServiceAccount | null => {
@@ -172,7 +161,7 @@ if (finalServiceKey) {
             to: sanitizedPhone,
             type: "template",
             template: {
-              name: "abd_chk",
+              name: ABANDONED_CHECKOUT_TEMPLATE,
               language: { code: "en_US" },
               components: [
                 {
