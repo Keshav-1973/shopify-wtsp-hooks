@@ -278,7 +278,6 @@ if (finalServiceKey) {
           } catch (error: any) {
             const errorMsg = error.response?.data ?? error.message;
             console.error("❌ WhatsApp send failed:", errorMsg);
-
             await db.collection("whatsappLogs").add({
               phone: sanitizedPhone,
               checkoutId,
@@ -300,7 +299,7 @@ if (finalServiceKey) {
     const hmac = req.get("X-Shopify-Hmac-Sha256");
     if (!hmac || !SHOPIFY_SECRET_KEY) {
       console.log("❌ Missing HMAC or SECRET_KEY");
-      // return res.sendStatus(403);
+      return res.sendStatus(403);
     }
 
     const computedHmac = crypto
@@ -310,7 +309,7 @@ if (finalServiceKey) {
 
     if (computedHmac !== hmac) {
       console.log("❌ HMAC verification failed");
-      // return res.sendStatus(403);
+      return res.sendStatus(403);
     }
 
     res.sendStatus(200); // Respond to Shopify
@@ -382,9 +381,24 @@ if (finalServiceKey) {
           );
 
           console.log("✅ WhatsApp message sent:", response.data);
+
+          await db.collection("whatsappLogs").add({
+            phone: sanitizedPhone,
+            messageId: response?.data?.messages?.[0]?.id,
+            checkoutId: checkout?.id,
+            status: response?.data?.messages?.[0]?.message_status,
+          });
         } catch (error: any) {
           const errorMsg = error.response?.data ?? error.message;
+
           console.error("❌ WhatsApp send failed:", errorMsg);
+          await db.collection("whatsappLogs").add({
+            phone: sanitizedPhone,
+            checkoutId: checkout?.id,
+            status: "failed",
+            timestamp: admin.firestore.Timestamp.now(),
+            error: errorMsg,
+          });
         }
       }
     }
