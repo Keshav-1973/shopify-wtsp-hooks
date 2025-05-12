@@ -230,11 +230,14 @@ if (finalServiceKey) {
             .limit(1)
             .get();
 
-          const hh = recentMessages.docs[0].data().timestamp.toDate() as any;
-          const now = new Date() as any;
-          if (!recentMessages.empty && now - hh < 24 * 60 * 60 * 1000) {
-            console.log("⏱️ WhatsApp already sent in last 24h");
-            return;
+          if (!recentMessages.empty) {
+            const now = new Date() as any;
+
+            const hh = recentMessages.docs[0]?.data()?.timestamp?.toDate();
+            if (hh && now - hh.getTime() < 24 * 60 * 60 * 1000) {
+              console.log("⏱️ WhatsApp already sent in last 24h");
+              return;
+            }
           }
 
           const messageData = {
