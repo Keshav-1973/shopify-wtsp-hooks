@@ -246,7 +246,7 @@ if (finalServiceKey) {
             type: "template",
             template: {
               name: ABANDONED_CHECKOUT_TEMPLATE,
-              language: { code: "en" },
+              language: { code: "en_US" },
               components: [
                 {
                   type: "header",
@@ -278,6 +278,20 @@ if (finalServiceKey) {
             },
           };
 
+          const date = new Date(Number(admin.firestore.Timestamp.now()) * 1000); // Convert to milliseconds
+
+          // Format the time to AM/PM format
+          const options: Intl.DateTimeFormatOptions = {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true, // AM/PM format
+          };
+
+          const timeInAmPmFormat = new Intl.DateTimeFormat(
+            "en-US",
+            options
+          ).format(date);
+
           try {
             const response = await axios.post(
               `https://graph.facebook.com/v22.0/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
@@ -297,8 +311,10 @@ if (finalServiceKey) {
               phone: sanitizedPhone,
               messageId: response?.data?.messages?.[0]?.id,
               checkoutId,
-              wtsp_status: response?.data?.messages?.[0]?.message_status,
-              checkout_completed_at: checkout.completed_at,
+              wtsp_status:
+                response?.data?.messages?.[0]?.message_status ?? null,
+              checkout_completed_at: checkout.completed_at ?? null,
+              formattedTime: timeInAmPmFormat, // Store the time in AM/PM format
             });
           } catch (error: any) {
             const errorMsg = error.response?.data ?? error.message;
@@ -308,8 +324,8 @@ if (finalServiceKey) {
               phone: sanitizedPhone,
               checkoutId,
               status: "failed",
-              timestamp: admin.firestore.Timestamp.now(),
-              checkout_completed_at: checkout.completed_at,
+              formattedTime: timeInAmPmFormat, // Store the time in AM/PM format
+              checkout_completed_at: checkout?.completed_at ?? null,
               error: errorMsg,
             });
 
