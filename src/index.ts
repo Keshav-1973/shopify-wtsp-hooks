@@ -246,7 +246,7 @@ if (finalServiceKey) {
             type: "template",
             template: {
               name: ABANDONED_CHECKOUT_TEMPLATE,
-              language: { code: "en_US" },
+              language: { code: "en" },
               components: [
                 {
                   type: "header",
